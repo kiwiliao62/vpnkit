@@ -21,6 +21,7 @@ target "export-binary" {
   target = "export"
   output = ["type=local,dest=./dist"]
   platforms = [
-    "linux/amd64"  # 仅导出 amd64 平台的文件
+    "linux/amd64",
+    "linux/arm64"  # 保留此平台以通过工作流验证
   ]
 }
