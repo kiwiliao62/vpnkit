@@ -1,11 +1,17 @@
+# 修改记录:
+# 0. 触发事件: 只手动
+# 1. 将 push 参数设置为 false，不推送容器镜像
+# 2. 将 target "bin-image" 的 platforms 改为仅包含 linux/amd64，实现单平台编译
+# 3. 添加步骤来提取 vpnkit.exe 并将其作为构建产物上传
+
 name: bin-image
 
-# Default to 'contents: read', which grants actions to read commits.
-#
-# If any permission is set, any permission not included in the list is
-# implicitly set to "none".
-#
-# see https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#permissions
+#Default to 'contents: read', which grants actions to read commits.
+
+#If any permission is set, any permission not included in the list is
+#implicitly set to "none".
+
+#see https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#permissions
 permissions:
   contents: read
 
@@ -15,13 +21,10 @@ concurrency:
 
 on:
   workflow_dispatch:
-  push:
     branches:
       - 'master'
     tags:
-      - 'v*'
-  pull_request:
-
+      - 'v0.6.0'
 env:
   REPO_SLUG: moby/vpnkit-bin
 jobs:
@@ -29,8 +32,8 @@ jobs:
     uses: crazy-max/.github/.github/workflows/bake-distribute-mp.yml@d9a10e2737504a6e253f96e344cef684b0e00cb5
     with:
       target: bin-image
-      push: ${{ github.event_name != 'pull_request' && github.repository == 'moby/vpnkit' }}
-      cache: false # See: https://github.com/moby/vpnkit/pull/647/files/3d4f258e7514b9cc878639f724cbb0caffa8fd98#r2032880337
+      push: false  # 不推送容器镜像
+      cache: false #See: https://github.com/moby/vpnkit/pull/647/files/3d4f258e7514b9cc878639f724cbb0caffa8fd98#r2032880337
       meta-image: moby/vpnkit-bin
       meta-tags: |
         type=semver,pattern={{version}}
@@ -40,3 +43,28 @@ jobs:
     secrets:
       login-username: ${{ secrets.DOCKERHUB_USERNAME }}
       login-password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+  extract-vpnkit:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Load the built image
+        run: docker load -i path/to/your/image.tar  # 请根据实际情况修改路径
+
+      - name: Extract vpnkit.exe
+        run: |
+          docker create --name extract moby/vpnkit-bin:latest
+          docker cp extract:/path/to/vpnkit.exe ./vpnkit.exe
+          docker rm extract
+
+      - name: Upload vpnkit.exe as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vpnkit-exe
+          path: ./vpnkit.exe
