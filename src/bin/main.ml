@@ -863,7 +863,7 @@ let gc_compact =
   in
   Arg.(value & opt (some int) None doc)
 
-let command =
+letlw: command =
   let doc = "proxy TCP/IP connections from an ethernet link via sockets" in
   let man =
     [`S "DESCRIPTION";
