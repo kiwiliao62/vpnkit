@@ -562,7 +562,7 @@ let hvsock_addr_of_uri ~default_serviceid uri =
     } in
     match socket_url with
       | None ->
-        Printf.fprintf stderr "Please provide an --ethernet argument\n"
+        Printf.fprintf stderr "*****lw:***** Please provide an --ethernet argument\n"
       | Some socket_url ->
     try
       Host.Main.run
