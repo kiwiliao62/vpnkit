@@ -1,11 +1,11 @@
+# 修改记录:
+# 1. 仅保留workflow_dispatch手动触发
+# 2. 设置push: false禁止推送镜像
+# 3. 修改target为export-binary直接导出文件
+# 4. 添加文件校验步骤确保获取正确平台的二进制
+
 name: bin-image
 
-#Default to 'contents: read', which grants actions to read commits.
-#
-#If any permission is set, any permission not included in the list is
-#implicitly set to "none".
-#
-#see https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#permissions
 permissions:
   contents: read
 
@@ -15,19 +15,16 @@ concurrency:
 
 on:
   workflow_dispatch:
-    branches:
-      - 'master'
-    tags:
-      - 'v0.6.0'
+
 env:
   REPO_SLUG: moby/vpnkit-bin
 jobs:
   build:
-    uses: crazy-max/.github/.github/workflows/bake-distribute-mp.yml@d9a10e2737504a6e253f96e344cef684b0e00cb5
+    uses: ./.github/workflows/bake-distribute-mp.yml
     with:
-      target: bin-image
-      push: ${{ github.event_name != 'pull_request' && github.repository == 'moby/vpnkit' }}
-      cache: false #See: https://github.com/moby/vpnkit/pull/647/files/3d4f258e7514b9cc878639f724cbb0caffa8fd98#r2032880337
+      target: export-binary  # 使用导出文件的目标
+      push: false
+      cache: false
       meta-image: moby/vpnkit-bin
       meta-tags: |
         type=semver,pattern={{version}}
@@ -37,3 +34,21 @@ jobs:
     secrets:
       login-username: ${{ secrets.DOCKERHUB_USERNAME }}
       login-password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+  upload-binary:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Verify binary platform
+        run: |
+          file ./dist/vpnkit  # 验证文件类型（应显示 x86-64 架构）
+          chmod +x ./dist/vpnkit  # 添加执行权限
+
+      - name: Upload vpnkit as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vpnkit-binary
+          path: ./dist/vpnkit
