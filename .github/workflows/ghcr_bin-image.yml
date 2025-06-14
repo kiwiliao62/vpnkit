@@ -14,9 +14,9 @@ on:
     tags:
       - 'v0.6.0'
 env:
-  REPO_SLUG: moby/vpnkit-bin
+  REPO_SLUG: kiwiliao62/vpnkit-bin
   REGISTRY: ghcr.io  # 设置 GHCR 为目标注册表
-  IMAGE_NAME: ${{ github.repository_owner }}/${{ env.REPO_SLUG }}  # 使用仓库所有者作为用户名
+  IMAGE_NAME: ${{ github.repository_owner }}/vpnkit-bin  # 使用仓库所有者作为用户名
 
 jobs:
   build:
@@ -25,7 +25,7 @@ jobs:
       target: bin-image
       push: ${{github.repository == 'kiwiliao62/vpnkit' }}
       cache: false # See: https://github.com/moby/vpnkit/pull/647/files/3d4f258e7514b9cc878639f724cbb0caffa8fd98#r2032880337
-      meta-image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}  # 更新镜像名称为 GHCR 格式
+      meta-image: ghcr.io/${{ github.repository_owner }}/vpnkit-bin   # 更新镜像名称为 GHCR 格式
       meta-tags: |
         type=semver,pattern={{version}}
         type=ref,event=branch
