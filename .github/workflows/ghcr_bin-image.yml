@@ -31,6 +31,7 @@ jobs:
         type=ref,event=branch
         type=ref,event=pr
         type=sha
+      login-registry: ghcr.io
     secrets:
       login-username: ${{ github.actor }}  # 使用触发工作流的 GitHub 用户名
       login-password: ${{ secrets.GITHUB_TOKEN }}  # 使用 GitHub 自动生成的 token
